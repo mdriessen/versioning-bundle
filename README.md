@@ -94,12 +94,6 @@ App\Provider\MyCustomProvider:
         - { name: shivas_versioning.provider, alias: my_provider, priority: 0 }
 ```
 
-```xml
-<service id="App\Provider\MyCustomProvider">
-    <tag name="shivas_versioning.provider" alias="my_provider" priority="0" />
-</service>
-```
-
 Please take a look at the priority attribute, it should be between 0 and 99 to keep the providers in the right order.
 
 Ensure your provider is loaded correctly and supported:
