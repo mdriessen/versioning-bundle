@@ -159,7 +159,7 @@ EOPHP
         eval(<<<EOPHP
 namespace Shivas\VersioningBundle\Provider;
 
-function exec(string \$command, array &\$execOutput = null, int &\$execExitCode = null): string
+function exec(string \$command, ?array &\$execOutput = null, ?int &\$execExitCode = null): string
 {
     if ('git describe --tags --long 2>&1' === \$command) {
         \$execOutput = $self::\$gitDescribeOutput;
