@@ -1,0 +1,88 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    _defaults:
+        public: false
+        # autowire: true # Automatically injects dependencies in your services.
+        # autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # Aliases
+    Shivas\VersioningBundle\Service\VersionManagerInterface: '@shivas_versioning.manager'
+    Shivas\VersioningBundle\Formatter\FormatterInterface: '@shivas_versioning.formatter.git'
+    Shivas\VersioningBundle\Writer\WriterInterface: '@shivas_versioning.writer.version'
+
+    # Services
+    shivas_versioning.manager:
+        class: Shivas\VersioningBundle\Service\VersionManager
+        arguments:
+            - '@shivas_versioning.cache.version'
+            - '@Shivas\VersioningBundle\Writer\WriterInterface'
+            - '@Shivas\VersioningBundle\Formatter\FormatterInterface'
+
+    shivas_versioning.formatter.git:
+        class: Shivas\VersioningBundle\Formatter\GitDescribeFormatter
+
+    shivas_versioning.writer.version:
+        class: Shivas\VersioningBundle\Writer\VersionWriter
+        arguments: ['%kernel.project_dir%']
+
+    # Providers
+    shivas_versioning.provider.version:
+        class: Shivas\VersioningBundle\Provider\VersionProvider
+        arguments: ['%kernel.project_dir%']
+        tags:
+            - { name: shivas_versioning.provider, alias: version, priority: 100 }
+
+    shivas_versioning.provider.git:
+        class: Shivas\VersioningBundle\Provider\GitRepositoryProvider
+        arguments: ['%kernel.project_dir%']
+        tags:
+            - { name: shivas_versioning.provider, alias: git, priority: -25 }
+
+    shivas_versioning.provider.revision:
+        class: Shivas\VersioningBundle\Provider\RevisionProvider
+        arguments: ['%kernel.project_dir%']
+        tags:
+            - { name: shivas_versioning.provider, alias: revision, priority: -50 }
+
+    shivas_versioning.provider.init:
+        class: Shivas\VersioningBundle\Provider\InitialVersionProvider
+        tags:
+            - { name: shivas_versioning.provider, alias: init, priority: -75 }
+
+    # Cache
+    shivas_versioning.cache.version:
+        parent: cache.system
+        tags:
+            - { name: cache.pool }
+
+    # Commands
+    shivas_versioning.command.status:
+        class: Shivas\VersioningBundle\Command\StatusCommand
+        arguments: ['@Shivas\VersioningBundle\Service\VersionManagerInterface']
+        tags:
+            - { name: console.command }
+
+    shivas_versioning.command.list_providers:
+        class: Shivas\VersioningBundle\Command\ListProvidersCommand
+        arguments: ['@Shivas\VersioningBundle\Service\VersionManagerInterface']
+        tags:
+            - { name: console.command }
+
+    shivas_versioning.command.version_bump:
+        class: Shivas\VersioningBundle\Command\VersionBumpCommand
+        arguments: ['@Shivas\VersioningBundle\Service\VersionManagerInterface']
+        tags:
+            - { name: console.command }
+
+    # Twig Extensions
+    shivas_versioning.twig.version:
+        class: Shivas\VersioningBundle\Twig\VersionExtension
+        arguments: ['@Shivas\VersioningBundle\Service\VersionManagerInterface']
+        tags:
+            - { name: twig.extension }
