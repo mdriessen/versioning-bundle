@@ -11,13 +11,27 @@ jobs:
     strategy:
       matrix:
         # Earliest and latest version of each major version
-        php-versions: ['7.2', '7.4', '8.0', '8.3']
+        php-versions: ['7.2', '7.4', '8.0', '8.3', '8.4']
         prefer: ['prefer-stable', 'prefer-lowest']
-        symfony-versions: ['^5.4', '^6', '^7']
+        symfony-versions: ['^5.4', '^6', '^7', '^8']
         include:
             - symfony-versions: '^7'
-              symfony7-required-yaml-version: '^6 || ^7'
+              symfony-required-yaml-version: '^6 || ^7'
+            - symfony-versions: '^8'
+              symfony-required-yaml-version: '^7 || ^8'
+              symfony-required-dependency-injection-version: '^8'
+            - php-versions: '8.4'
+              required-nikolaposa-version: '^4.2.1'
         exclude:
+            # Symfony 8 requires at least PHP 8.4
+            - php-versions: '7.2'
+              symfony-versions: '^8'
+            - php-versions: '7.4'
+              symfony-versions: '^8'
+            - php-versions: '8.0'
+              symfony-versions: '^8'
+            - php-versions: '8.3'
+              symfony-versions: '^8'
             # Symfony 7 requires at least PHP 8.2
             - php-versions: '7.2'
               symfony-versions: '^7'
@@ -58,8 +72,14 @@ jobs:
         for symfony_package in $(jq -r '.require | keys[]' composer.json | grep '^symfony/'); do
           composer require --no-update "${symfony_package}:${{ matrix.symfony-versions }}"
         done
-        if [ -n "${{ matrix.symfony7-required-yaml-version }}" ]; then
-          composer require --dev --no-update "symfony/yaml:${{ matrix.symfony7-required-yaml-version }}"
+        if [ -n "${{ matrix.symfony-required-yaml-version }}" ]; then
+          composer require --dev --no-update "symfony/yaml:${{ matrix.symfony-required-yaml-version }}"
+        fi
+        if [ -n "${{ matrix.symfony-required-dependency-injection-version }}" ]; then
+          composer require --dev --no-update "symfony/dependency-injection:${{ matrix.symfony-required-dependency-injection-version }}"
+        fi
+        if [ -n "${{ matrix.required-nikolaposa-version }}" ]; then
+          composer require --no-update "nikolaposa/version:${{ matrix.required-nikolaposa-version }}"
         fi
         composer --prefer-dist --${{ matrix.prefer }} update
 
